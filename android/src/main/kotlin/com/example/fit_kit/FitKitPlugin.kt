@@ -80,7 +80,8 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun hasPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
-                .addDataTypes(request.types.map { it.dataType })
+                // Added the read scope based on the new guidlines
+                .addDataTypes(request.types.map { it.dataType }, FitnessOptions.ACCESS_READ)
                 .build()
 
         if (hasOAuthPermission(options)) {
@@ -92,7 +93,8 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun requestPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
-                .addDataTypes(request.types.map { it.dataType })
+                // Added the read scope based on the new guidlines
+                .addDataTypes(request.types.map { it.dataType }, FitnessOptions.ACCESS_READ)
                 .build()
 
         requestOAuthPermissions(options, {
@@ -132,7 +134,8 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun read(request: ReadRequest<*>, result: Result) {
         val options = FitnessOptions.builder()
-                .addDataType(request.type.dataType)
+                // Added the read scope based on the new guidlines
+                .addDataType(request.type.dataType, FitnessOptions.ACCESS_READ)
                 .build()
 
         requestOAuthPermissions(options, {

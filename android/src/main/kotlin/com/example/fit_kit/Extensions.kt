@@ -14,7 +14,7 @@ fun String.fromDartType(): Type? {
         "distance" -> Type.Sample(DataType.TYPE_DISTANCE_DELTA)
         "energy" -> Type.Sample(DataType.TYPE_CALORIES_EXPENDED)
         "water" -> Type.Sample(DataType.TYPE_HYDRATION)
-        "sleep" -> Type.Activity(FitnessActivities.SLEEP)
+        "sleep" -> Type.Activity(DataType.TYPE_SLEEP_SEGMENT)
         else -> null
     }
 }
@@ -26,11 +26,11 @@ fun FitnessOptions.Builder.addDataTypes(dataTypes: List<DataType>) = apply {
 // because this value is private field in Session
 fun Session.getValue(): Int {
     return when (this.activity) {
-        FitnessActivities.SLEEP -> 72
-        FitnessActivities.SLEEP_LIGHT -> 109
-        FitnessActivities.SLEEP_DEEP -> 110
-        FitnessActivities.SLEEP_REM -> 111
-        FitnessActivities.SLEEP_AWAKE -> 112
+        SleepStages.SLEEP -> 72
+        SleepStages.SLEEP_LIGHT -> 109
+        SleepStages.SLEEP_DEEP -> 110
+        SleepStages.SLEEP_REM -> 111
+        SleepStages.AWAKE -> 112
         else -> throw Exception("session ${this.activity} is not supported")
     }
 }
