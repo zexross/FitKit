@@ -102,10 +102,6 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
         })
     }
 
-    /**
-     * let's wait for some answers
-     * https://github.com/android/fit-samples/issues/28#issuecomment-557865949
-     */
     private fun revokePermissions(result: Result) {
         val fitnessOptions = FitnessOptions.builder()
                 .build()
@@ -179,7 +175,6 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     }
 
     private fun readSample(request: ReadRequest<Type.Sample>, result: Result) {
-        Log.d(TAG, "readSample: ${request.type}")
 
         val readRequest = DataReadRequest.Builder()
                 .read(request.type.dataType)
@@ -229,7 +224,6 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     }
 
     private fun readSession(request: ReadRequest<Type.Activity>, result: Result) {
-        Log.d(TAG, "readSession: ${request.type.activity}")
 
         val readRequest = SessionReadRequest.Builder()
                 .read(request.type.dataType)

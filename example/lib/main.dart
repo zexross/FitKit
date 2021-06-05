@@ -16,7 +16,7 @@ class _MyAppState extends State<MyApp> {
   bool permissions;
 
   RangeValues _dateRange = RangeValues(1, 8);
-  List<DateTime> _dates = List<DateTime>();
+  List<DateTime> _dates = [];
   double _limitRange = 0;
 
   DateTime get _dateFrom => _dates[_dateRange.start.round()];
@@ -131,7 +131,7 @@ class _MyAppState extends State<MyApp> {
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           '$item - ${results[item].length}',
-                          style: Theme.of(context).textTheme.title,
+                          style: Theme.of(context).textTheme.headline6,
                         ),
                       );
                     } else if (item is FitData) {
@@ -204,18 +204,22 @@ class _MyAppState extends State<MyApp> {
     return Row(
       children: [
         Expanded(
-          child: FlatButton(
-            color: Theme.of(context).accentColor,
-            textColor: Colors.white,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Theme.of(context).accentColor,
+              primary: Colors.white,
+            ),
             onPressed: () => read(),
             child: Text('Read'),
           ),
         ),
         Padding(padding: EdgeInsets.symmetric(horizontal: 4)),
         Expanded(
-          child: FlatButton(
-            color: Theme.of(context).accentColor,
-            textColor: Colors.white,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Theme.of(context).accentColor,
+              primary: Colors.white,
+            ),
             onPressed: () => revokePermissions(),
             child: Text('Revoke permissions'),
           ),
