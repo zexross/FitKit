@@ -81,7 +81,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     private fun hasPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
                 // Added the read scope based on the new guidlines
-                .addDataTypes(request.types.map { it.dataType }, FitnessOptions.ACCESS_READ)
+                .addDataTypes(request.types.map { it.dataType })
                 .build()
 
         if (hasOAuthPermission(options)) {
@@ -94,7 +94,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     private fun requestPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
                 // Added the read scope based on the new guidlines
-                .addDataTypes(request.types.map { it.dataType }, FitnessOptions.ACCESS_READ)
+                .addDataTypes(request.types.map { it.dataType })
                 .build()
 
         requestOAuthPermissions(options, {
@@ -135,7 +135,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     private fun read(request: ReadRequest<*>, result: Result) {
         val options = FitnessOptions.builder()
                 // Added the read scope based on the new guidlines
-                .addDataType(request.type.dataType, FitnessOptions.ACCESS_READ)
+                .addDataType(request.type.dataType)
                 .build()
 
         requestOAuthPermissions(options, {
@@ -230,9 +230,9 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
         val readRequest = SessionReadRequest.Builder()
                 .read(request.type.dataType)
+                .includeSleepSessions()
                 .setTimeInterval(request.dateFrom.time, request.dateTo.time, TimeUnit.MILLISECONDS)
                 .readSessionsFromAllApps()
-                .enableServerQueries()
                 .build()
 
         Fitness.getSessionsClient(registrar.context(), GoogleSignIn.getLastSignedInAccount(registrar.context())!!)
@@ -243,7 +243,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
     }
 
     private fun onSuccess(request: ReadRequest<Type.Activity>, response: SessionReadResponse, result: Result) {
-        response.sessions.filter { request.type.activity == it.activity }
+        response.sessions
                 .let { list ->
                     when (request.limit != null) {
                         true -> list.takeLast(request.limit)

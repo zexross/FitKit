@@ -20,17 +20,17 @@ fun String.fromDartType(): Type? {
 }
 
 fun FitnessOptions.Builder.addDataTypes(dataTypes: List<DataType>) = apply {
-    dataTypes.forEach { dataType -> addDataType(dataType) }
+    dataTypes.forEach { dataType -> addDataType(dataType, FitnessOptions.ACCESS_READ) }
 }
 
 // because this value is private field in Session
 fun Session.getValue(): Int {
     return when (this.activity) {
-        SleepStages.SLEEP -> 72
-        SleepStages.SLEEP_LIGHT -> 109
-        SleepStages.SLEEP_DEEP -> 110
-        SleepStages.SLEEP_REM -> 111
-        SleepStages.AWAKE -> 112
+        FitnessActivities.SLEEP -> 2
+        FitnessActivities.SLEEP_LIGHT -> 4
+        FitnessActivities.SLEEP_DEEP -> 5
+        FitnessActivities.SLEEP_REM -> 6
+        FitnessActivities.SLEEP_AWAKE -> 1
         else -> throw Exception("session ${this.activity} is not supported")
     }
 }
