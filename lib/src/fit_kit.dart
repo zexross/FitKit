@@ -5,7 +5,7 @@ class FitKit {
 
   /// iOS isn't completely supported by HealthKit, false means no, true means user has approved or declined permissions.
   /// In case user has declined permissions read will just return empty list for declined data types.
-  static Future<bool> hasPermissions(List<DataType> types) async {
+  static Future<bool?> hasPermissions(List<DataType> types) async {
     return await _channel.invokeMethod('hasPermissions', {
       "types": types.map((type) => _dataTypeToString(type)).toList(),
     });
@@ -15,7 +15,7 @@ class FitKit {
   /// otherwise iOS HealthKit will ask to approve every permission one by one in separate screens.
   ///
   /// `await FitKit.requestPermissions(DataType.values)`
-  static Future<bool> requestPermissions(List<DataType> types) async {
+  static Future<bool?> requestPermissions(List<DataType> types) async {
     return await _channel.invokeMethod('requestPermissions', {
       "types": types.map((type) => _dataTypeToString(type)).toList(),
     });
@@ -29,9 +29,9 @@ class FitKit {
   /// #### It's not advised to call `await FitKit.read(dataType)` without any extra parameters. This can lead to FAILED BINDER TRANSACTION on Android devices because of the data batch size being too large.
   static Future<List<FitData>> read(
     DataType type, {
-    DateTime dateFrom,
-    DateTime dateTo,
-    int limit,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? limit,
   }) async {
     return await _channel
         .invokeListMethod('read', {
@@ -41,7 +41,7 @@ class FitKit {
           "limit": limit,
         })
         .then(
-          (response) => response.map((item) => FitData.fromJson(item)).toList(),
+          (response) => response!.map((item) => FitData.fromJson(item)).toList(),
         )
         .catchError(
           (_) => throw UnsupportedException(type),
@@ -52,7 +52,7 @@ class FitKit {
         );
   }
 
-  static Future<FitData> readLast(DataType type) async {
+  static Future<FitData?> readLast(DataType type) async {
     return await read(type, limit: 1)
         .then((results) => results.isEmpty ? null : results[0]);
   }
@@ -79,8 +79,9 @@ class FitKit {
         return "stand_time";
       case DataType.EXERCISE_TIME:
         return "exercise_time";
+      default:
+      throw Exception('dataType $type not supported');
     }
-    throw Exception('dataType $type not supported');
   }
 }
 
