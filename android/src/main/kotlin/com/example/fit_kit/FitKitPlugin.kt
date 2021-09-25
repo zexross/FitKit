@@ -1,7 +1,9 @@
 package com.example.fit_kit
 
+import androidx.annotation.NonNull
+
 import android.app.Activity
-import android.util.Log
+import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.fitness.Fitness
@@ -14,43 +16,47 @@ import com.google.android.gms.fitness.request.DataReadRequest
 import com.google.android.gms.fitness.request.SessionReadRequest
 import com.google.android.gms.fitness.result.DataReadResponse
 import com.google.android.gms.fitness.result.SessionReadResponse
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
+import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
 import java.util.concurrent.TimeUnit
 
+const val TAG = "FitKit"
+const val CHANNEL_NAME = "fit_kit"
+const val TAG_UNSUPPORTED = "unsupported"
+const val GOOGLE_FIT_REQUEST_CODE = 8008
 
-class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
+class FitKitPlugin(private var channel: MethodChannel? = null) : MethodCallHandler, ActivityResultListener, ActivityAware,  FlutterPlugin {
+
 
     interface OAuthPermissionsListener {
         fun onOAuthPermissionsResult(resultCode: Int)
     }
 
     private val oAuthPermissionListeners = mutableListOf<OAuthPermissionsListener>()
+    private var activity: Activity? = null
 
-    init {
-        registrar.addActivityResultListener { requestCode, resultCode, _ ->
-            if (requestCode == GOOGLE_FIT_REQUEST_CODE) {
-                oAuthPermissionListeners.toList()
-                        .forEach { it.onOAuthPermissionsResult(resultCode) }
-                return@addActivityResultListener true
-            }
-            return@addActivityResultListener false
-        }
+        override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, CHANNEL_NAME)
+        channel?.setMethodCallHandler(this)
     }
 
-    companion object {
-        private const val TAG = "FitKit"
-        private const val TAG_UNSUPPORTED = "unsupported"
-        private const val GOOGLE_FIT_REQUEST_CODE = 8008
+    override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        channel?.setMethodCallHandler(null)
+    }
 
-        @JvmStatic
-        fun registerWith(registrar: Registrar) {
-            val channel = MethodChannel(registrar.messenger(), "fit_kit")
-            channel.setMethodCallHandler(FitKitPlugin(registrar))
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        if (requestCode == GOOGLE_FIT_REQUEST_CODE) {
+            oAuthPermissionListeners.toList()
+                    .forEach { it.onOAuthPermissionsResult(resultCode) }
+            return true
         }
+        return false
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -80,7 +86,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun hasPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
-                // Added the read scope based on the new guidlines
+                // Added the read scope based on the new guidelines
                 .addDataTypes(request.types.map { it.dataType })
                 .build()
 
@@ -93,7 +99,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun requestPermissions(request: PermissionsRequest, result: Result) {
         val options = FitnessOptions.builder()
-                // Added the read scope based on the new guidlines
+                // Added the read scope based on the new guidelines
                 .addDataTypes(request.types.map { it.dataType })
                 .build()
 
@@ -113,13 +119,13 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
             return
         }
 
-        Fitness.getConfigClient(registrar.context(), GoogleSignIn.getLastSignedInAccount(registrar.context())!!)
+        Fitness.getConfigClient(activity!!.applicationContext, GoogleSignIn.getLastSignedInAccount(activity!!.applicationContext)!!)
                 .disableFit()
                 .continueWithTask {
                     val signInOptions = GoogleSignInOptions.Builder()
                             .addExtension(fitnessOptions)
                             .build()
-                    GoogleSignIn.getClient(registrar.context(), signInOptions)
+                    GoogleSignIn.getClient(activity!!.applicationContext, signInOptions)
                             .revokeAccess()
                 }
                 .addOnSuccessListener { result.success(null) }
@@ -134,7 +140,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun read(request: ReadRequest<*>, result: Result) {
         val options = FitnessOptions.builder()
-                // Added the read scope based on the new guidlines
+                // Added the read scope based on the new guidelines
                 .addDataType(request.type.dataType)
                 .build()
 
@@ -167,14 +173,14 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
         })
 
         GoogleSignIn.requestPermissions(
-                registrar.activity(),
+                activity!!,
                 GOOGLE_FIT_REQUEST_CODE,
-                GoogleSignIn.getLastSignedInAccount(registrar.context()),
+                GoogleSignIn.getLastSignedInAccount(activity!!.applicationContext),
                 fitnessOptions)
     }
 
     private fun hasOAuthPermission(fitnessOptions: FitnessOptions): Boolean {
-        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(registrar.context()), fitnessOptions)
+        return GoogleSignIn.hasPermissions(GoogleSignIn.getLastSignedInAccount(activity!!.applicationContext), fitnessOptions)
     }
 
     private fun readSample(request: ReadRequest<Type.Sample>, result: Result) {
@@ -191,7 +197,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
                 .enableServerQueries()
                 .build()
 
-        Fitness.getHistoryClient(registrar.context(), GoogleSignIn.getLastSignedInAccount(registrar.context())!!)
+        Fitness.getHistoryClient(activity!!.applicationContext, GoogleSignIn.getLastSignedInAccount(activity!!.applicationContext)!!)
                 .readData(readRequest)
                 .addOnSuccessListener { response -> onSuccess(response, result) }
                 .addOnFailureListener { e -> result.error(TAG, e.message, null) }
@@ -235,7 +241,7 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
                 .readSessionsFromAllApps()
                 .build()
 
-        Fitness.getSessionsClient(registrar.context(), GoogleSignIn.getLastSignedInAccount(registrar.context())!!)
+        Fitness.getSessionsClient(activity!!.applicationContext, GoogleSignIn.getLastSignedInAccount(activity!!.applicationContext)!!)
                 .readSession(readRequest)
                 .addOnSuccessListener { response -> onSuccess(request, response, result) }
                 .addOnFailureListener { e -> result.error(TAG, e.message, null) }
@@ -272,5 +278,28 @@ class FitKitPlugin(private val registrar: Registrar) : MethodCallHandler {
                 "source" to source,
                 "user_entered" to (source == "user_input")
         )
+    }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        if (channel == null) {
+            return
+        }
+        binding.addActivityResultListener(this)
+        activity = binding.activity
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        onDetachedFromActivity()
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        onAttachedToActivity(binding)
+    }
+
+    override fun onDetachedFromActivity() {
+        if (channel == null) {
+            return
+        }
+        activity = null
     }
 }

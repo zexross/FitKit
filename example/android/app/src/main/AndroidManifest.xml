@@ -9,9 +9,6 @@
     <application
         android:label="fit_kit_example"
         android:icon="@mipmap/ic_launcher">
-        <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
@@ -31,5 +28,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
     </application>
 </manifest>

@@ -13,22 +13,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String result = '';
   Map<DataType, List<FitData>> results = Map();
-  bool permissions;
+  late bool permissions;
 
   RangeValues _dateRange = RangeValues(1, 8);
   List<DateTime> _dates = [];
   double _limitRange = 0;
 
   DateTime get _dateFrom => _dates[_dateRange.start.round()];
-  DateTime get _dateTo => _dates[_dateRange.end.round()];
-  int get _limit => _limitRange == 0.0 ? null : _limitRange.round();
+  DateTime get _dateTo => _dates[_dateRange.end.round() - 1];
+  int? get _limit => _limitRange == 0.0 ? null : _limitRange.round();
 
   @override
   void initState() {
     super.initState();
+    permissions = false;
 
     final now = DateTime.now();
-    _dates.add(null);
     for (int i = 7; i >= 0; i--) {
       _dates.add(DateTime(
         now.year,
@@ -36,7 +36,6 @@ class _MyAppState extends State<MyApp> {
         now.day,
       ).subtract(Duration(days: i)));
     }
-    _dates.add(null);
 
     hasPermissions();
   }
@@ -45,7 +44,7 @@ class _MyAppState extends State<MyApp> {
     results.clear();
 
     try {
-      permissions = await FitKit.requestPermissions(DataType.values);
+      permissions = (await FitKit.requestPermissions(DataType.values))!;
       if (!permissions) {
         result = 'requestPermissions: failed';
       } else {
@@ -76,7 +75,7 @@ class _MyAppState extends State<MyApp> {
 
     try {
       await FitKit.revokePermissions();
-      permissions = await FitKit.hasPermissions(DataType.values);
+      permissions = (await FitKit.hasPermissions(DataType.values))!;
       result = 'revokePermissions: success';
     } catch (e) {
       result = 'revokePermissions: $e';
@@ -87,7 +86,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> hasPermissions() async {
     try {
-      permissions = await FitKit.hasPermissions(DataType.values);
+      permissions = (await FitKit.hasPermissions(DataType.values))!;
     } catch (e) {
       result = 'hasPermissions: $e';
     }
@@ -130,7 +129,7 @@ class _MyAppState extends State<MyApp> {
                       return Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          '$item - ${results[item].length}',
+                          '$item - ${results[item]?.length ?? ''}',
                           style: Theme.of(context).textTheme.headline6,
                         ),
                       );
@@ -159,10 +158,6 @@ class _MyAppState extends State<MyApp> {
   }
 
   String _dateToString(DateTime dateTime) {
-    if (dateTime == null) {
-      return 'null';
-    }
-
     return '${dateTime.day}.${dateTime.month}.${dateTime.year}';
   }
 
@@ -206,7 +201,7 @@ class _MyAppState extends State<MyApp> {
         Expanded(
           child: TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: Theme.of(context).accentColor,
+              backgroundColor: Theme.of(context).colorScheme.secondary,
               primary: Colors.white,
             ),
             onPressed: () => read(),
@@ -217,7 +212,7 @@ class _MyAppState extends State<MyApp> {
         Expanded(
           child: TextButton(
             style: TextButton.styleFrom(
-              backgroundColor: Theme.of(context).accentColor,
+              backgroundColor: Theme.of(context).colorScheme.secondary,
               primary: Colors.white,
             ),
             onPressed: () => revokePermissions(),
