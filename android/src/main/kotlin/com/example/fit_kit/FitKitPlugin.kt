@@ -268,7 +268,7 @@ class FitKitPlugin(private var channel: MethodChannel? = null) : MethodCallHandl
                 .filterNot { it.originalDataSource.streamName.isNullOrEmpty() }
                 .groupingBy { it.originalDataSource.streamName }
                 .eachCount()
-                .maxBy { it.value }
+                .maxByOrNull { it.value }
                 ?.key ?: session.name ?: ""
 
         return mapOf(
